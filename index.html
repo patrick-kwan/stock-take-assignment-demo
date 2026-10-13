@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stock Take Assignment Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#f3f2ee; --panel:#f8f8f6; --card:#ffffff; --soft:#eef3f4; --line:#dfe6eb; --text:#1f2d39; --muted:#6f7a85; --primary:#24394a; --primary-2:#6c8d93; --accent:#dfeee4; --accent-strong:#7ea87d; --warning:#f4e7be; --warning-text:#654d18; --danger:#d97777; --danger-soft:#f9e7ea; --success:#dfeee4; --shadow:0 8px 24px rgba(18,31,39,0.08); --radius:18px; --page-size:10; }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{ margin:0; font-family:"Inter",sans-serif; background:var(--bg); color:var(--text); padding:24px 18px 28px; }
+    .page{ max-width:1400px; margin:0 auto; }
+    .topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+    .brand-group{ display:flex; align-items:center; gap:12px; }
+    .brand-mark{ width:52px; height:52px; border-radius:16px; background:linear-gradient(135deg,#24394a,#4c6373); color:white; font-size:1.3rem; font-weight:800; display:grid; place-items:center; box-shadow:var(--shadow); }
+    .brand-title{ font-weight:800; font-size:2rem; letter-spacing:-0.06em; line-height:0.96; color:#24394a; }
+    .tag{ display:inline-flex; align-items:center; gap:8px; padding:7px 12px; border-radius:999px; background:rgba(255,255,255,0.5); border:1px solid #dfe6eb; color:var(--muted); font-size:0.8rem; letter-spacing:0.08em; text-transform:uppercase; }
+    .tag .dot{ width:8px; height:8px; border-radius:50%; background:#7ea87d; display:inline-block; }
+    .layout{ display:grid; grid-template-columns: 1.15fr 0.85fr; gap:18px; align-items:start; }
+    .left-panel{ background:var(--panel); border:1px solid #e5e2dd; border-radius:18px; box-shadow:var(--shadow); padding:18px; }
+    .right-panel{ background:var(--panel); border:1px solid #e5e2dd; border-radius:18px; box-shadow:var(--shadow); padding:18px; }
+    .section-label{ font-size:0.78rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; font-weight:700; }
+    .filter-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px; }
+    .field{ display:flex; flex-direction:column; gap:6px; }
+    .field label{ font-size:0.76rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); font-weight:700; }
+    select, input[type="text"], textarea{ width:100%; min-height:42px; font:inherit; border:1px solid var(--line); background:#fff; border-radius:10px; padding:10px 12px; color:var(--text); }
+    textarea{ min-height:100px; resize:vertical; }
+    .button-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+    .btn{ border:none; cursor:pointer; border-radius:10px; font:inherit; font-weight:600; padding:10px 14px; transition:0.12s ease; display:inline-flex; align-items:center; justify-content:center; min-height:38px; }
+    .btn:hover{ transform:translateY(-1px); }
+    .btn.primary{ background:#dfeee4; color:#1d4730; border:1px solid #cae3cf; }
+    .btn.secondary{ background:#ffffff; color:var(--text); border:1px solid var(--line); }
+    .btn.ghost{ background:transparent; color:var(--text); border:1px solid var(--line); }
+    .btn.warn{ background:#f9f1df; color:var(--warning-text); border:1px solid #ecd8a8; }
+    .preview-banner{ background:linear-gradient(180deg,#edf7e8,#f5faf3); border:1px solid #d8e9d5; color:#2c5a3d; border-radius:12px; padding:10px 12px; font-size:0.92rem; margin-top:14px; }
+    .toolbar{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:18px; margin-bottom:12px; }
+    .toolbar h3{ margin:0; font-size:1.15rem; letter-spacing:-0.03em; }
+    .toolbar .meta{ font-size:0.82rem; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; font-weight:700; }
+    .scope-dialog{ display:none; background:#f5faf7; border:1px solid #dfeee4; border-radius:14px; padding:14px; margin-top:10px; }
+    .scope-dialog.visible{ display:block; }
+    .scope-dialog h4{ margin:0 0 8px; font-size:1rem; }
+    .scope-options{ display:flex; gap:12px; flex-wrap:wrap; margin-top:10px; }
+    .scope-option{ flex:1; min-width:180px; padding:12px; border-radius:12px; background:#fff; border:1px solid #dfe6eb; cursor:pointer; transition:0.12s ease; }
+    .scope-option.selected{ border-color:#8bc3a5; box-shadow:inset 0 0 0 1px #8bc3a5; background:#f4faf6; }
+    .scope-option strong{ display:block; margin-bottom:6px; font-size:0.98rem; }
+    .scope-option .details{ color:var(--muted); font-size:0.84rem; }
+    .detail-pane{ display:none; margin-top:14px; background:#fff; border:1px solid #e4edf1; border-radius:12px; padding:12px; }
+    .detail-pane.active{ display:block; }
+    .detail-pane.dimmed{ opacity:0.52; pointer-events:none; background:linear-gradient(180deg,#f9fafb,#f4f6f8); }
+    .detail-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+    .summary-pill{ font-size:0.78rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); font-weight:700; background:#f2f5f6; border:1px solid #e5edf0; padding:7px 10px; border-radius:999px; }
+    .table-wrap{ border:1px solid #edf1f4; border-radius:10px; overflow:hidden; background:#fff; }
+    table{ width:100%; border-collapse:collapse; }
+    th,td{ text-align:left; padding:10px 12px; border-bottom:1px solid #edf1f4; font-size:0.9rem; }
+    th{ background:#f3f6f8; color:var(--muted); letter-spacing:0.03em; font-size:0.76rem; text-transform:uppercase; font-weight:700; }
+    tbody tr:hover{ background:#fafcfd; }
+    .row-check{ width:20px; }
+    .is-assigned{ display:inline-flex; align-items:center; padding:5px 8px; border-radius:999px; font-size:0.72rem; font-weight:700; background:#f6e4d1; color:#7b4c12; border:1px solid #efc98e; }
+    .row-actions{ display:flex; gap:8px; align-items:center; justify-content:flex-end; }
+    .page-header{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:12px; margin-bottom:10px; }
+    .pager{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .pager button{ min-width:34px; height:34px; border-radius:8px; border:1px solid var(--line); background:#fff; cursor:pointer; }
+    .pager button.active{ background:var(--primary); color:#fff; border-color:var(--primary); }
+    .pager button:disabled{ opacity:0.45; cursor:not-allowed; }
+    .checkout-box{ background:#f1f9f2; border:1px solid #d8ebda; color:#2d6641; border-radius:12px; padding:10px 12px; margin-top:10px; font-size:0.9rem; }
+    .right-panel h3{ margin:0 0 6px; font-size:1.15rem; letter-spacing:-0.04em; }
+    .checker-select{ margin-top:12px; }
+    .checker-list{ display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+    .checker-card{ border:1px solid #dfe8ee; background:#fff; border-radius:12px; padding:12px; }
+    .checker-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+    .checker-head strong{ font-size:0.96rem; }
+    .checker-pill{ background:#edf4f6; color:#34566a; font-size:0.7rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; border-radius:999px; padding:6px 8px; }
+    .checker-items{ max-height:210px; overflow:auto; display:flex; flex-direction:column; gap:6px; }
+    .checker-item{ display:flex; justify-content:space-between; align-items:center; gap:8px; border:1px solid #edf1f4; border-radius:9px; background:#fafbfd; padding:8px 10px; }
+    .checker-item .loc{ font-size:0.88rem; font-weight:600; }
+    .checker-item .meta{ color:var(--muted); font-size:0.72rem; }
+    .basket-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+    .right-subtle{ margin-top:8px; color:var(--muted); font-size:0.78rem; line-height:1.5; }
+    .toast{ display:none; margin-top:10px; border-radius:10px; padding:10px 12px; background:#ecf6ee; color:#1f5f46; border:1px solid #cfe9d7; font-size:0.88rem; }
+    .toast.show{ display:block; }
+    .small-btn{ padding:8px 10px; border-radius:9px; border:1px solid var(--line); background:#fff; cursor:pointer; font-weight:600; min-height:34px; }
+    .count-box{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+    .count-box .stat{ background:#fff; border:1px solid #ebeff2; border-radius:10px; padding:10px; text-align:center; }
+    .count-box .stat strong{ display:block; font-size:1.2rem; letter-spacing:-0.05em; }
+    .count-box .stat span{ font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); }
+    @media (max-width:980px){ .layout{ grid-template-columns:1fr; } .filter-grid{ grid-template-columns:1fr; } .topbar{ flex-direction:column; align-items:flex-start; } .brand-title{ font-size:1.5rem; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="brand-group">
+        <div class="brand-mark">ST</div>
+        <div>
+          <div class="tag"><span class="dot"></span> Hybrid assignment workspace</div>
+          <div class="brand-title">Stock Take Assignment</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="tag">Demo • functional flow</div>
+        <div style="font-weight:700;color:#27414a;">Version <span id="versionValue">v1.0.0</span></div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="left-panel">
+        <div class="section-label">Filter + Selection</div>
+
+        <div class="filter-grid">
+          <div class="field">
+            <label>Zone</label>
+            <select id="zoneFilter"></select>
+          </div>
+          <div class="field">
+            <label>Bin section</label>
+            <select id="binFilter"></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Location search</label>
+          <input id="searchInput" type="text" placeholder="e.g. A-01-014 or B-03" />
+        </div>
+
+        <div class="button-row">
+          <button class="btn primary" id="selectAllBtn">Select all 1,300</button>
+          <button class="btn secondary" id="clearFiltersBtn">Clear</button>
+        </div>
+
+        <div class="preview-banner" id="previewBanner">
+          Page selection is only a preview.
+        </div>
+
+        <div class="scope-dialog" id="scopeDialog">
+          <h4>Scope selection</h4>
+          <div id="scopeDialogText" class="muted" style="font-size:0.9rem; color:var(--muted);">This scope contains matching locations.</div>
+          <div class="scope-options">
+            <div class="scope-option selected" data-mode="all">
+              <strong>Select all matching locations</strong>
+              <div class="details">Apply the entire matching scope to the active checker.</div>
+            </div>
+            <div class="scope-option" data-mode="manual">
+              <strong>Do not select all</strong>
+              <div class="details">Enable manual row selection and add individual rows.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <h3>Locations</h3>
+          <div class="meta" id="countMeta">1,300 matching</div>
+        </div>
+
+        <div class="detail-pane" id="detailPane">
+          <div class="detail-head">
+            <div class="summary-pill" id="summaryPill">Page 1 of 1</div>
+            <div class="summary-pill" id="selectionPill">0 selected</div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="row-check"><input type="checkbox" id="pageCheckAll" /></th>
+                  <th>Location</th>
+                  <th>Zone</th>
+                  <th>Section</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="rowsBody"></tbody>
+            </table>
+          </div>
+
+          <div class="page-header">
+            <div class="summary-pill" id="pageSummary">Previewing 0 of 0</div>
+            <div class="pager" id="pager"></div>
+          </div>
+
+          <div class="button-row">
+            <button class="btn primary" id="addSelectedBtn">Add selected</button>
+            <button class="btn secondary" id="clearVisibleRowsBtn">Clear visible selection</button>
+          </div>
+
+          <div class="checkout-box" id="checkoutBox">
+            Individual rows are still unavailable until you choose “Do not select all”.
+          </div>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div class="section-label">Assignment basket</div>
+        <h3>Checker plan</h3>
+
+        <div class="checker-select">
+          <label style="display:block; font-size:0.76rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); font-weight:700; margin-bottom:6px;">Active checker</label>
+          <select id="activeChecker"></select>
+        </div>
+
+        <div class="count-box">
+          <div class="stat">
+            <strong id="basketTotal">0</strong>
+            <span>Locations</span>
+          </div>
+          <div class="stat">
+            <strong id="sourceCount">0</strong>
+            <span>Sources</span>
+          </div>
+          <div class="stat">
+            <strong id="reviewCount">0</strong>
+            <span>Review</span>
+          </div>
+        </div>
+
+        <div class="checker-list" id="checkerList"></div>
+
+        <div class="basket-actions">
+          <button class="btn secondary" id="clearSelectedBinsBtn">Clear selected bins</button>
+          <button class="btn primary" id="commitBtn">Commit assignment plan</button>
+        </div>
+
+        <div class="right-subtle">
+          The same location is protected against duplication within the same checker basket. Already assigned records are visible and flagged.
+        </div>
+
+        <div class="toast" id="toast"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // show version from VERSION file (relative fetch) and fall back to embedded version string
+    (function loadVersion(){
+      const el = document.getElementById('versionValue');
+      fetch('VERSION').then(r => { if (!r.ok) throw new Error('no'); return r.text(); }).then(text => {
+        const v = text.trim(); if (v) el.textContent = v; document.title = `Stock Take Assignment Demo — ${v}`;
+      }).catch(()=>{
+        // fallback remains
+      });
+    })();
+
+    const zones = [ {name:'All zones', value:'__all'}, {name:'Zone A — Ambient', value:'A'}, {name:'Zone B — Bulk', value:'B'}, {name:'Zone C — Cold chain', value:'C'}, {name:'Zone D — Dispatch', value:'D'}, {name:'Zone E — Overflow', value:'E'}, {name:'Zone F — Returns', value:'F'} ];
+    const binSectionOptions = ['__all','01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43','44','45','46','47','48','49','50'];
+    const checkers = [ {id:'CHK-MAYA', name:'Maya Chen'}, {id:'CHK-ARUN', name:'Arun Das'}, {id:'CHK-SITI', name:'Siti Rahman'}, {id:'CHK-LEON', name:'Leon Tan'} ];
+    const alreadyAssigned = new Set(['D-01-001','D-01-002','D-01-003','D-01-004','A-01-064']);
+
+    let allLocations = [];
+    let filtered = [];
+    let currentPage = 1;
+    let pageSize = 10;
+    let manualMode = false;
+    let scopeMode = 'all';
+    let activeCheckerId = 'CHK-MAYA';
+    let basketByChecker = {};
+    let visibleSelections = new Set();
+
+    function createLocations(){
+      const counts = {A:500,B:300,C:100,D:40,E:344,F:16};
+      const sectionsByZone = {A:50,B:30,C:10,D:4,E:35,F:2};
+      const rows = [];
+      Object.keys(counts).forEach(zone => {
+        const total = counts[zone];
+        const sections = sectionsByZone[zone];
+        let generated = 0;
+        for (let s=1;s<=sections && generated<total;s++){
+          const sec = String(s).padStart(2,'0');
+          const perSection = Math.min(10, Math.ceil(total/sections));
+          for (let p=1;p<=perSection && generated<total;p++){
+            const code = `${zone}-${sec}-${String(p).padStart(3,'0')}`;
+            rows.push({ location:code, zone, binSection:sec, position:p, item:`Item ${code}`, status:'Available', lastCountDate:'2025-01-01' });
+            generated++;
+          }
+        }
+      });
+      return rows;
+    }
+
+    function initBasketByChecker(){ checkers.forEach(c => basketByChecker[c.id] = []); }
+    function findLocation(location){ return allLocations.find(x => x.location.toLowerCase() === location.toLowerCase()); }
+    function setToast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(setToast.timer); setToast.timer = setTimeout(() => t.classList.remove('show'), 2200); }
+
+    function getFilteredLocations(){
+      const zone = document.getElementById('zoneFilter').value;
+      const bin = document.getElementById('binFilter').value;
+      const q = document.getElementById('searchInput').value.trim().toUpperCase();
+      let res = allLocations.slice();
+      if (zone !== '__all') res = res.filter(x => x.zone === zone);
+      if (bin !== '__all') res = res.filter(x => x.binSection === bin);
+      if (q) res = res.filter(x => x.location.toUpperCase().includes(q));
+      return res;
+    }
+
+    function renderZoneFilter(){ const zoneFilter = document.getElementById('zoneFilter'); zoneFilter.innerHTML = zones.map(z => `<option value="${z.value}">${z.name}</option>`).join(''); zoneFilter.value = '__all'; }
+    function renderBinFilter(){ const binFilter = document.getElementById('binFilter'); binFilter.innerHTML = '<option value="__all">All bin sections</option>' + binSectionOptions.filter(v=>v!=='__all').map(v => `<option value="${v}">${v}</option>`).join(''); binFilter.value='__all'; }
+    function renderCheckerSelect(){ const activeChecker = document.getElementById('activeChecker'); activeChecker.innerHTML = checkers.map(c => `<option value="${c.id}">${c.name} (${c.id})</option>`).join(''); activeChecker.value = activeCheckerId; }
+
+    function updateCounts(){ filtered = getFilteredLocations(); const totalCount = filtered.length; document.getElementById('countMeta').textContent = `${totalCount.toLocaleString()} matching`; document.getElementById('selectAllBtn').textContent = `Select all ${totalCount.toLocaleString()}`; currentPage = Math.min(currentPage, Math.max(1, Math.ceil(totalCount / pageSize) || 1)); if (totalCount === 0) currentPage = 1; renderRows(); renderBasket(); renderScopeDialogState(); }
+
+    function renderScopeDialogState(){ const dialog = document.getElementById('scopeDialog'); const text = document.getElementById('scopeDialogText'); const zone = document.getElementById('zoneFilter').value; const bin = document.getElementById('binFilter').value; const matching = getFilteredLocations().length; if (zone !== '__all' || bin !== '__all') { dialog.classList.add('visible'); text.textContent = `${matching.toLocaleString()} locations match this scope.`; } else { dialog.classList.remove('visible'); } if (manualMode) { document.getElementById('detailPane').classList.add('active'); document.getElementById('detailPane').classList.remove('dimmed'); document.getElementById('checkoutBox').textContent = 'Manual selection is enabled.'; } else { document.getElementById('detailPane').classList.remove('active'); document.getElementById('detailPane').classList.add('dimmed'); document.getElementById('checkoutBox').textContent = 'Select “Do not select all” to enable individual bin selection.'; } }
+
+    function renderRows(){ const body = document.getElementById('rowsBody'); const pageSummary = document.getElementById('pageSummary'); const pager = document.getElementById('pager'); const detailPane = document.getElementById('detailPane'); const matches = getFilteredLocations(); const totalPages = Math.max(1, Math.ceil(matches.length / pageSize)); currentPage = Math.min(currentPage, totalPages); if (matches.length === 0) { body.innerHTML = `<tr><td colspan="6" style="padding:18px; color:var(--muted); text-align:center;">No locations match these filters.</td></tr>`; pageSummary.textContent = 'No locations match these filters.'; pager.innerHTML = ''; detailPane.classList.add('active'); document.getElementById('summaryPill').textContent = 'Page 1 of 1'; document.getElementById('selectionPill').textContent = '0 selected'; return; }
+      const start = (currentPage - 1) * pageSize; const end = start + pageSize; const pageItems = matches.slice(start, end);
+      body.innerHTML = pageItems.map((item, idx) => { const isAssigned = alreadyAssigned.has(item.location); const isSelected = visibleSelections.has(item.location); return `
+          <tr data-location="${item.location}">
+            <td class="row-check"><input type="checkbox" data-row="${item.location}" ${isSelected ? 'checked' : ''}></td>
+            <td><strong>${item.location}</strong></td>
+            <td>${item.zone}</td>
+            <td>${item.binSection}</td>
+            <td>${isAssigned ? '<span class="is-assigned">Already assigned</span>' : '<span style="color:#2f6e4a; font-weight:700;">Available</span>'}</td>
+            <td>
+              <div class="row-actions">
+                <button class="small-btn" data-add="${item.location}">Add</button>
+              </div>
+            </td>
+          </tr>
+        `; }).join('');
+      document.getElementById('summaryPill').textContent = `Page ${currentPage} of ${totalPages}`; document.getElementById('selectionPill').textContent = `${visibleSelections.size} selected`; pageSummary.textContent = `Previewing ${Math.min(matches.length, end)} of ${matches.length} matching · page ${currentPage} of ${totalPages}`;
+      const pages = []; const maxVisiblePages = 6; let startPage = Math.max(1, currentPage - 2); let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1); if (endPage - startPage < maxVisiblePages - 1) startPage = Math.max(1, endPage - maxVisiblePages + 1); for (let p = startPage; p <= endPage; p++) pages.push(p);
+      pager.innerHTML = ''; const prev = document.createElement('button'); prev.textContent = '‹'; prev.disabled = currentPage === 1; prev.addEventListener('click', () => { currentPage--; renderRows(); }); pager.appendChild(prev);
+      pages.forEach(p => { const btn = document.createElement('button'); btn.textContent = p; if (p === currentPage) btn.classList.add('active'); btn.addEventListener('click', () => { currentPage = p; renderRows(); }); pager.appendChild(btn); });
+      const next = document.createElement('button'); next.textContent = '›'; next.disabled = currentPage === totalPages; next.addEventListener('click', () => { currentPage++; renderRows(); }); pager.appendChild(next);
+      bindTableEvents(); syncPageCheckAll(); }
+
+    function bindTableEvents(){ document.querySelectorAll('[data-add]').forEach(btn => { btn.addEventListener('click', () => { const location = btn.dataset.add; addDirectToBasket(location); }); });
+      document.querySelectorAll('input[data-row]').forEach(input => { input.addEventListener('change', (e) => { const loc = e.target.dataset.row; if (e.target.checked) { visibleSelections.add(loc); } else { visibleSelections.delete(loc); } updateSelectionPill(); }); });
+      const pageCheck = document.getElementById('pageCheckAll'); pageCheck.checked = false; pageCheck.indeterminate = false; pageCheck.addEventListener('change', () => { const pageLocs = getFilteredLocations().slice((currentPage - 1) * pageSize, currentPage * pageSize).map(x => x.location); if (pageCheck.checked) { pageLocs.forEach(loc => visibleSelections.add(loc)); } else { pageLocs.forEach(loc => visibleSelections.delete(loc)); } renderRows(); }); }
+
+    function syncPageCheckAll(){ const pageCheck = document.getElementById('pageCheckAll'); const pageLocs = getFilteredLocations().slice((currentPage - 1) * pageSize, currentPage * pageSize).map(x => x.location); const selectedOnPage = pageLocs.filter(loc => visibleSelections.has(loc)).length; pageCheck.checked = pageLocs.length > 0 && selectedOnPage === pageLocs.length; pageCheck.indeterminate = selectedOnPage > 0 && selectedOnPage < pageLocs.length; updateSelectionPill(); }
+
+    function updateSelectionPill(){ const count = visibleSelections.size; document.getElementById('selectionPill').textContent = `${count} selected`; }
+
+    function addDirectToBasket(location){ const item = findLocation(location); if (!item) return; const checker = activeCheckerId; const existing = basketByChecker[checker].some(x => x.location === location); if (existing) { setToast('This location is already in the current checker basket.'); return; } basketByChecker[checker].push({ location: item.location, zone: item.zone, binSection: item.binSection, source: 'Direct select', alreadyAssigned: alreadyAssigned.has(item.location) }); renderBasket(); setToast(`${location} added to ${checker}`); }
+
+    function addSelectedVisibleRows(){ const locs = [...visibleSelections]; if (!locs.length) { setToast('No rows selected.'); return; } const checker = activeCheckerId; const existing = new Set(basketByChecker[checker].map(x => x.location)); let added = 0; locs.forEach(loc => { if (existing.has(loc)) return; const item = findLocation(loc); if (!item) return; basketByChecker[checker].push({ location: item.location, zone: item.zone, binSection: item.binSection, source: 'Direct select', alreadyAssigned: alreadyAssigned.has(item.location) }); existing.add(loc); added++; }); visibleSelections.clear(); renderRows(); renderBasket(); setToast(`${added} location(s) added to ${checker}`); }
+
+    function renderBasket(){ const checkerList = document.getElementById('checkerList'); const basketTotal = document.getElementById('basketTotal'); const sourceCount = document.getElementById('sourceCount'); const reviewCount = document.getElementById('reviewCount'); const allItems = []; Object.entries(basketByChecker).forEach(([checkerId, list]) => allItems.push(...list.map(item => ({...item, checkerId})))); basketTotal.textContent = allItems.length.toLocaleString(); sourceCount.textContent = new Set(allItems.map(x => x.source)).size.toString(); reviewCount.textContent = allItems.filter(x => x.alreadyAssigned).length.toString(); checkerList.innerHTML = checkers.map(checker => { const items = basketByChecker[checker.id] || []; const rows = items.map(item => ` <div class="checker-item"> <div> <div class="loc">${item.location}</div> <div class="meta">${item.zone} • ${item.binSection}</div> </div> <button class="small-btn" data-remove-item="${checker.id}:${item.location}">Remove</button> </div> `).join(''); return ` <div class="checker-card"> <div class="checker-head"> <strong>${checker.name}</strong> <span class="checker-pill">${items.length} items</span> </div> <div class="checker-items">${rows || '<div class="right-subtle">No locations assigned yet.</div>'}</div> </div> `; }).join(''); checkerList.querySelectorAll('[data-remove-item]').forEach(el => { el.addEventListener('click', () => { const [cid, loc] = el.dataset.removeItem.split(':'); basketByChecker[cid] = basketByChecker[cid].filter(x => x.location !== loc); renderBasket(); setToast(`Removed ${loc} from ${cid}`); }); }); document.getElementById('activeChecker').value = activeCheckerId; }
+
+    function clearVisibleSelection(){ visibleSelections.clear(); renderRows(); setToast('Visible row selections cleared.'); }
+
+    function handleScopeDecision(mode){ const matches = getFilteredLocations(); if (!matches.length) { setToast('No matching locations.'); return; } scopeMode = mode; if (mode === 'all') { const target = activeCheckerId; const existing = new Set(basketByChecker[target].map(item => item.location)); let added = 0; matches.forEach(item => { if (existing.has(item.location)) return; basketByChecker[target].push({ location: item.location, zone: item.zone, binSection: item.binSection, source: 'All filtered', alreadyAssigned: alreadyAssigned.has(item.location) }); existing.add(item.location); added++; }); manualMode = false; renderRows(); renderBasket(); setToast(`${added} location(s) added from scope to ${target}`); } else { manualMode = true; renderScopeDialogState(); document.getElementById('detailPane').classList.add('active'); document.getElementById('detailPane').classList.remove('dimmed'); document.getElementById('checkoutBox').textContent = 'Manual selection enabled. Select rows and click Add selected.'; document.getElementById('previewBanner').style.display = 'none'; } }
+
+    function bindScopeDialog(){ document.querySelectorAll('.scope-option').forEach(opt => { opt.addEventListener('click', () => { document.querySelectorAll('.scope-option').forEach(o => o.classList.remove('selected')); opt.classList.add('selected'); handleScopeDecision(opt.dataset.mode); }); }); }
+
+    function clearFilters(){ document.getElementById('zoneFilter').value = '__all'; document.getElementById('binFilter').value = '__all'; document.getElementById('searchInput').value = ''; currentPage = 1; visibleSelections.clear(); manualMode = false; scopeMode = 'all'; document.getElementById('previewBanner').style.display = 'block'; document.getElementById('detailPane').classList.remove('active'); document.getElementById('detailPane').classList.add('dimmed'); renderRows(); renderScopeDialogState(); setToast('Filters cleared.'); }
+
+    function bindEvents(){ document.getElementById('zoneFilter').addEventListener('change', () => { if (document.getElementById('zoneFilter').value !== '__all' || document.getElementById('binFilter').value !== '__all') { currentPage = 1; visibleSelections.clear(); renderRows(); renderScopeDialogState(); } else { currentPage = 1; visibleSelections.clear(); renderRows(); } });
+      document.getElementById('binFilter').addEventListener('change', () => { if (document.getElementById('zoneFilter').value !== '__all' || document.getElementById('binFilter').value !== '__all') { currentPage = 1; visibleSelections.clear(); renderRows(); renderScopeDialogState(); } else { currentPage = 1; visibleSelections.clear(); renderRows(); } });
+      document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; visibleSelections.clear(); renderRows(); });
+      document.getElementById('selectAllBtn').addEventListener('click', () => { const matches = getFilteredLocations(); if (!matches.length) { setToast('No locations match.'); return; } handleScopeDecision('all'); });
+      document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
+      document.getElementById('addSelectedBtn').addEventListener('click', addSelectedVisibleRows);
+      document.getElementById('clearVisibleRowsBtn').addEventListener('click', clearVisibleSelection);
+      document.getElementById('activeChecker').addEventListener('change', (e) => { activeCheckerId = e.target.value; setToast(`Active checker changed to ${activeCheckerId}`); });
+      document.getElementById('commitBtn').addEventListener('click', () => { let total = 0; Object.values(basketByChecker).forEach(list => total += list.length); if (!total) { setToast('There are no assignments to commit.'); return; } const payload = {}; Object.entries(basketByChecker).forEach(([checkerId, list]) => { payload[checkerId] = list.map(x => x.location); }); setToast(`Simulated commit: ${total} locations assigned across ${Object.keys(payload).length} checker(s).`); Object.keys(basketByChecker).forEach(key => basketByChecker[key] = []); renderBasket(); });
+      document.getElementById('clearSelectedBinsBtn').addEventListener('click', () => { const checker = activeCheckerId; if (!basketByChecker[checker].length) { setToast('No selected scope bins to clear for this checker.'); return; } basketByChecker[checker] = []; renderBasket(); setToast(`Cleared selected bins for ${checker}.`); });
+      document.getElementById('searchInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); currentPage = 1; renderRows(); } });
+      document.getElementById('pageCheckAll').addEventListener('change', () => { const allOnPage = getFilteredLocations().slice((currentPage - 1) * pageSize, currentPage * pageSize).map(x => x.location); if (document.getElementById('pageCheckAll').checked) { allOnPage.forEach(loc => visibleSelections.add(loc)); } else { allOnPage.forEach(loc => visibleSelections.delete(loc)); } renderRows(); }); }
+
+    function init(){ allLocations = createLocations(); initBasketByChecker(); renderZoneFilter(); renderBinFilter(); renderCheckerSelect(); bindEvents(); bindScopeDialog(); renderRows(); renderBasket(); renderScopeDialogState(); }
+
+    init();
+  </script>
+</body>
+</html>
